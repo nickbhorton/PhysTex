@@ -81,6 +81,43 @@ public class Symbol {
         }
         return bitmap;
     }
+
+    public int[][] getAlphaChannel(int width, int height, int antialiasFactor) {
+        int[][] alphaChannelPreAntialias = new int[height * antialiasFactor][width * antialiasFactor];
+        for (int i = 0; i < height * antialiasFactor; i++) {
+            for (int j = 0; j < width * antialiasFactor; j++) {
+                int xPixel = j;
+                int yPixel = i;
+                Point rayOrigin = new maths.Point(((double) xPixel + 0.5d) / ((double) (width * antialiasFactor)), 1.0d - ((double) yPixel + 0.5d) / ((double) (height * antialiasFactor)));
+                int windingNumber = 0;
+                for (int n = 0; n < ba.length; n++) {
+                    int returnNumFromRayIntersect = ba[n].doesRayIntersect(rayOrigin, new maths.Point(1, 0));
+                    windingNumber += returnNumFromRayIntersect;
+                }
+                if (windingNumber != 0) {
+                    alphaChannelPreAntialias[i][j] = 255;
+                } else {
+                    alphaChannelPreAntialias[i][j] = 0;
+                }
+            }
+        }
+        int[][] alphaChannel = new int[height][width];
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                int avgAlphaValue = 0;
+                for (int m = 0; m < antialiasFactor; m++) {
+                    for (int n = 0; n < antialiasFactor; n++) {
+                        avgAlphaValue += alphaChannelPreAntialias[i*antialiasFactor + m][j*antialiasFactor + n];
+                    }
+                }
+                avgAlphaValue = Math.round((float)avgAlphaValue / (float) (antialiasFactor*antialiasFactor));
+                alphaChannel[i][j] = avgAlphaValue;
+            }
+        }
+        return alphaChannel;
+    }
+
+
     public Bezier[] getBa() {
         return ba;
     }

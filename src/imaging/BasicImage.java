@@ -36,13 +36,25 @@ public class BasicImage {
                 int yPixel = i - yLoc;
                 if (bitmap[yPixel][xPixel]) {
                     //System.out.print("x");
-                    setPixel(j, i, new Color(0, 0, 0));
+                    setPixel(j, i, new Color(0, 0, 0,255));
                 } else {
                     //System.out.print("o");
-                    setPixel(j, i, new Color(255, 255, 255));
+                    setPixel(j, i, new Color(0,0,0,0));
                 }
             }
             //System.out.println();
+        }
+    }
+
+    public void renderAlphaChannel(int[][] alphaChannel, int xLoc, int yLoc, Color c){
+        int symbolWidth = alphaChannel[0].length;
+        int symbolHeight = alphaChannel.length;
+        for (int i = yLoc; i < yLoc+symbolHeight; i++){
+            for (int j = xLoc; j < xLoc + symbolWidth; j++) {
+                int xPixel = j - xLoc;
+                int yPixel = i - yLoc;
+                setPixel(j, i, new Color(c.getR(), c.getG(), c.getB(), alphaChannel[yPixel][xPixel]));
+            }
         }
     }
 

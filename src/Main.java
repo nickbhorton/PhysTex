@@ -1,3 +1,4 @@
+import imaging.Color;
 import maths.curves.Bezier;
 import maths.curves.LinearBezier;
 import maths.curves.QuadraticBezier;
@@ -7,8 +8,8 @@ import imaging.BasicImage;
 public class Main {
     public static void main(String[] args){
         Symbol s = new Symbol("src/font/BlockFont/B.symbol");
-        BasicImage image = new BasicImage(256, 256);
-        image.renderBitmapBasic(s.getBitmap(256,256), 0, 0);
+        BasicImage image = new BasicImage(64, 64);
+        image.renderAlphaChannel(s.getAlphaChannel(64,64,1), 0,0, new Color(0,0,0));
         image.toImage("src/font/BlockFont/B.png");
     }
     public static void main2(String[] args){
