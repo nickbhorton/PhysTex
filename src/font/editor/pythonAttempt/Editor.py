@@ -117,6 +117,13 @@ def renderGrid(screen, zoom, xOffset, yOffset):
         pygame.draw.line(screen, (200,200,200), 
                 (xToZoomCoords(0, zoom, xOffset), yToZoomCoords(i, zoom, yOffset)),
                 (xToZoomCoords(800, zoom, xOffset), yToZoomCoords(i, zoom, yOffset)))
+    pygame.draw.line(screen, (0,0,255), 
+                (xToZoomCoords(0, zoom, xOffset), yToZoomCoords(200, zoom, yOffset)),
+                (xToZoomCoords(800, zoom, xOffset), yToZoomCoords(200, zoom, yOffset)))
+    pygame.draw.line(screen, (0,0,255), 
+                (xToZoomCoords(0, zoom, xOffset), yToZoomCoords(720, zoom, yOffset)),
+                (xToZoomCoords(800, zoom, xOffset), yToZoomCoords(720, zoom, yOffset)))
+
     
 def save(points, beziers, fileName):
     f = open(fileName, 'w+')
@@ -456,4 +463,4 @@ def run(fileName):
     pygame.quit()
 
 
-run("test.symbol")
+run("font/BlockFont/B.symbol")

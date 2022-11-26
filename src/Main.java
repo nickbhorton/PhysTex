@@ -5,7 +5,12 @@ import font.Symbol;
 import imaging.BasicImage;
 
 public class Main {
-
+    public static void main(String[] args){
+        Symbol s = new Symbol("src/font/BlockFont/B.symbol");
+        BasicImage image = new BasicImage(256, 256);
+        image.renderBitmapBasic(s.getBitmap(256,256), 0, 0);
+        image.toImage("src/font/BlockFont/B.png");
+    }
     public static void main2(String[] args){
         LinearBezier l1 = new LinearBezier(0.5,0,0,0.5);
         LinearBezier l2 = new LinearBezier(0,0.5,0.5,1);
@@ -19,7 +24,7 @@ public class Main {
     }
 
     // Save for testing Only Quadratic Bézier curves
-    public static void main(String[] args){
+    public static void main3(String[] args){
         QuadraticBezier q1 = new QuadraticBezier(0.2, 0.5, 0.2, 0.8, 0.5,0.8);
         QuadraticBezier q2 = new QuadraticBezier(0.5,0.8,0.8,0.8,0.8,0.5);
         QuadraticBezier q3 = new QuadraticBezier(0.8,0.5,0.8,0.2,0.5,0.2);
