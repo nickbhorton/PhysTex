@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 public class Symbol {
     private Bezier[] ba;
+    private int[][] lastAlphaRender;
     public Symbol(Bezier[] ba){
         this.ba = ba;
     }
@@ -114,9 +115,44 @@ public class Symbol {
                 alphaChannel[i][j] = avgAlphaValue;
             }
         }
+        lastAlphaRender = alphaChannel;
         return alphaChannel;
     }
 
+    public int[][] getTrimmedAlphaChannelX(){
+        if (lastAlphaRender == null){
+            System.out.println("No alpha channel to trim, call getAlphaChannel() before trimming. null returned ");
+            return null;
+        }
+        int[][] alphaChannel = lastAlphaRender;
+        int minXIndex = alphaChannel[0].length;
+        int maxXIndex = 0;
+        for (int y = 0; y < alphaChannel.length; y++){
+            for (int x = 0; x < alphaChannel[y].length; x++){
+                if (alphaChannel[y][x] != 0){
+                    if (x > maxXIndex){
+                        maxXIndex = x;
+                    }
+                    if (x < minXIndex){
+                        minXIndex = x;
+                    }
+                }
+            }
+        }
+        int newWidth = maxXIndex - minXIndex + 1;
+        int[][] newAlphaChannel = new int[alphaChannel.length][newWidth];
+        for (int y = 0; y < alphaChannel.length; y++){
+            for (int x = minXIndex; x < minXIndex + newWidth; x++){
+                newAlphaChannel[y][x-minXIndex] = alphaChannel[y][x];
+            }
+        }
+        lastAlphaRender = newAlphaChannel;
+        return newAlphaChannel;
+    }
+
+    public int[][] getLastAlphaRender() {
+        return lastAlphaRender;
+    }
 
     public Bezier[] getBa() {
         return ba;

@@ -4,13 +4,13 @@ import maths.curves.LinearBezier;
 import maths.curves.QuadraticBezier;
 import font.Symbol;
 import imaging.BasicImage;
+import text.Text;
 
 public class Main {
     public static void main(String[] args){
-        Symbol s = new Symbol("src/font/BlockFont/B.symbol");
-        BasicImage image = new BasicImage(64, 64);
-        image.renderAlphaChannel(s.getAlphaChannel(64,64,1), 0,0, new Color(0,0,0));
-        image.toImage("src/font/BlockFont/B.png");
+        Text testText = new Text("AB AB BBA BA");
+        BasicImage img = testText.getBlackAndWhiteRender(64, 2, 10, 40,  "BlockFont");
+        img.toImage("src/text/TestRenders/test.png");
     }
     public static void main2(String[] args){
         LinearBezier l1 = new LinearBezier(0.5,0,0,0.5);

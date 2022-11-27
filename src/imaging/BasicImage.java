@@ -58,6 +58,18 @@ public class BasicImage {
         }
     }
 
+    public void renderAlphaChannelBlackAndWhite(int[][] alphaChannel, int xLoc, int yLoc){
+        int symbolWidth = alphaChannel[0].length;
+        int symbolHeight = alphaChannel.length;
+        for (int i = yLoc; i < yLoc+symbolHeight; i++){
+            for (int j = xLoc; j < xLoc + symbolWidth; j++) {
+                int xPixel = j - xLoc;
+                int yPixel = i - yLoc;
+                setPixel(j, i, new Color(255 - alphaChannel[yPixel][xPixel], 255 - alphaChannel[yPixel][xPixel], 255 - alphaChannel[yPixel][xPixel], 255));
+            }
+        }
+    }
+
 
     public void renderPixelBooleanArray(boolean[][] pixelArray, imaging.Color c){
         for (int i = 0; i < pixelArray.length; i++){
@@ -77,6 +89,14 @@ public class BasicImage {
             }
         }
         return false;
+    }
+
+    public void setBackground(Color c){
+        for (int y = 0; y < height; y++){
+            for (int x = 0; x < width; x++){
+                setPixel(x, y ,c);
+            }
+        }
     }
     public void fill(int x, int y, imaging.Color newColor){
         imaging.Color oldColor = getPixel(x, y) ;
