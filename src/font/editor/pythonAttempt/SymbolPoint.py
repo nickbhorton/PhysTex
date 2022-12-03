@@ -1,6 +1,7 @@
 class Point:
     def __init__(self, x, y, type=None):
         self.selected = False
+        self.dragSelected = False
         self.x = x
         self.y = y
         self.type = type

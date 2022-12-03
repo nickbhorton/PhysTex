@@ -7,8 +7,8 @@ stateDict = {
         "awaitSelect":0,
         "pointSelected":1,
         "multiSelect":2,
-        "twoPointsSelected":3,
-        "threePointsSelected":4,
+        "dragSelect":3,
+        "multiMove":4,
         "lineAction":5,
         "quadraticBezierAction":6,
         "move":7}
@@ -16,8 +16,8 @@ stateDictReverse = {
         0:"awaitSelect",
         1:"pointSelected",
         2:"multiSelect",
-        3:"twoPointsSelected",
-        4:"threePointsSelected",
+        3:"dragSelect",
+        4:"multiMove",
         5:"lineAction",
         6:"quadraticBezierAction",
         7:"move"}
@@ -31,7 +31,7 @@ def yPointCoordsToPygameCoords(input, zoom, yOffset):
 
 
 def renderPoints(screen, points, zoom, xOffset, yOffset):
-    for point in points:
+    for i, point in enumerate(points):
         x = xPointCoordsToPygameCoords(point.x, zoom, xOffset)
         y = yPointCoordsToPygameCoords(point.y, zoom, yOffset)
         color = (0,0,0)
@@ -43,8 +43,10 @@ def renderPoints(screen, points, zoom, xOffset, yOffset):
             color = (255,0,255)
         elif point.type == "end":
             color = (255,0,0)
-        if point.selected == True:
+        if point.selected:
             color = (0,0,255)
+        if point.dragSelected:
+            color = (255, 180, 0)
         if x > 0 and x < 800 and y > 0 and y < 800:
             pygame.draw.circle(screen, color, (x,y), 5)
 
@@ -123,8 +125,12 @@ def renderGrid(screen, zoom, xOffset, yOffset):
     pygame.draw.line(screen, (0,0,255), 
                 (xToZoomCoords(0, zoom, xOffset), yToZoomCoords(720, zoom, yOffset)),
                 (xToZoomCoords(800, zoom, xOffset), yToZoomCoords(720, zoom, yOffset)))
-
-    
+    pygame.draw.line(screen, (0,0,255), 
+                (xToZoomCoords(200, zoom, xOffset), yToZoomCoords(0, zoom, yOffset)),
+                (xToZoomCoords(200, zoom, xOffset), yToZoomCoords(800, zoom, yOffset)))
+    pygame.draw.line(screen, (0,0,255), 
+                (xToZoomCoords(600, zoom, xOffset), yToZoomCoords(0, zoom, yOffset)),
+                (xToZoomCoords(600, zoom, xOffset), yToZoomCoords(800, zoom, yOffset)))
 def save(points, beziers, fileName):
     f = open(fileName, 'w+')
     f.write("#points\n")
@@ -202,12 +208,15 @@ def run(fileName):
     zoom = 1.0
     xOffset = 0
     yOffset = 0
+    moveBy = 0
     numberSelected = 0
     pointsSelected = []
     bezierList, points = load(fileName)
     lMouseDown = False
     lShiftDown = False
     selectedPoint = None
+    dragStart = None
+    dragEnd = None
 
     running = True
     # KEY TRACKERS
@@ -237,12 +246,14 @@ def run(fileName):
                         save(points, bezierList, fileName)
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
+                        noSelect = True
                         for point in points:
                             x = point.xToPygameCoords(zoom, xOffset, DISPLAY_SIZE)
                             y = point.yToPygameCoords(zoom, yOffset, DISPLAY_SIZE)
                             if selectedPoint == None:
                                 mouse_pos = pygame.mouse.get_pos()
                                 if (x-mouse_pos[0])**2 + (y-2*yOffset-mouse_pos[1])**2 < 15**2:
+                                    noSelect = False
                                     selectedPoint = point
                                     selectedPoint.selected = True
                                     if (lShiftDown):
@@ -254,23 +265,26 @@ def run(fileName):
                                     else:
                                         state = stateDict["pointSelected"]
                                         break
+                        if noSelect:
+                            dragStart = [xPygameCoordsToPointCoords(pygame.mouse.get_pos()[0], zoom, xOffset),
+                                yPygameCoordsToPointCoords(pygame.mouse.get_pos()[1], zoom, yOffset)]
+                            state = stateDict["dragSelect"]
                     if event.button == 3:
                         for point in points:
                             x = point.xToPygameCoords(zoom, xOffset, DISPLAY_SIZE)
                             y = point.yToPygameCoords(zoom, yOffset, DISPLAY_SIZE)
                             mouse_pos = pygame.mouse.get_pos()
                             if (x-mouse_pos[0])**2 + (y-2*yOffset-mouse_pos[1])**2 < 15**2:
-                                print("Inside")
                                 for bezier in bezierList:
                                     if isinstance(bezier, Bezier.LinearBezier):
                                         if bezier.p1 == point or bezier.p2 == point:
                                             bezierList.remove(bezier)
-                                            print(bezierList)
+                                            #print(bezierList)
                                             break
                                     if isinstance(bezier, Bezier.QuadraticBezier):
                                         if bezier.p1 == point or bezier.p2 == point or bezier.p3 == point:
                                             bezierList.remove(bezier)
-                                            print(bezierList)
+                                            #print(bezierList)
                                             break
                                 points.remove(point)
                                 break
@@ -345,8 +359,7 @@ def run(fileName):
                                     numberSelected += 1
                                     point.selected = True
                                     pointsSelected.append(point)
-                                    break
-                        
+                                    break                 
         elif state == stateDict["lineAction"]:
             bezierToRemove = None
             for bezier in bezierList:
@@ -364,7 +377,7 @@ def run(fileName):
                 elif bezierToRemove.p2.type == "end":
                     bezierToRemove.p2.type = None
                 bezierList.remove(bezierToRemove)
-                print(bezierList)
+                #print(bezierList)
             # Adding Linear Bezier Proccess
             else:
                 if (pointsSelected[0].type == None or pointsSelected[0].type == "end") and (pointsSelected[1].type == None or pointsSelected[1].type == "start"):
@@ -377,7 +390,7 @@ def run(fileName):
                     elif pointsSelected[1].type == "start":
                         pointsSelected[1].type = "middle"
                     bezierList.append(Bezier.LinearBezier(pointsSelected[0], pointsSelected[1]))
-                print(bezierList)
+                #print(bezierList)
 
             for point in pointsSelected:
                 point.selected = False
@@ -404,7 +417,7 @@ def run(fileName):
                 elif bezierToRemove.p3.type == "end":
                     bezierToRemove.p3.type = None
                 bezierList.remove(bezierToRemove)
-                print(bezierList)
+                #print(bezierList)
             # Adding Quadratic Bezier Proccess
             else:
                 if (pointsSelected[0].type == None or pointsSelected[0].type == "end")\
@@ -420,7 +433,7 @@ def run(fileName):
                     elif pointsSelected[2].type == "start":
                         pointsSelected[2].type = "middle"
                     bezierList.append(Bezier.QuadraticBezier(pointsSelected[0], pointsSelected[1], pointsSelected[2]))
-                    print(bezierList)
+                    #print(bezierList)
 
             for point in pointsSelected:
                 point.selected = False
@@ -451,6 +464,126 @@ def run(fileName):
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
                         lMouseDown = False
+        if state == stateDict["dragSelect"]:
+            renderGrid(screen, zoom, xOffset, yOffset)
+            renderBoundarys(screen, zoom, xOffset, yOffset)
+            renderBezier(screen, bezierList, zoom, xOffset, yOffset)
+            renderPoints(screen, points, zoom, xOffset, yOffset)
+            dragEnd = [xPygameCoordsToPointCoords(pygame.mouse.get_pos()[0], zoom, xOffset),
+                                yPygameCoordsToPointCoords(pygame.mouse.get_pos()[1], zoom, yOffset)]
+            pygame.draw.line(screen, (0,0,255), 
+                [
+                    xPointCoordsToPygameCoords(dragStart[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragStart[1], zoom, yOffset),],
+                [
+                    xPointCoordsToPygameCoords(dragStart[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragEnd[1], zoom, yOffset),])
+            pygame.draw.line(screen, (0,0,255), 
+                [
+                    xPointCoordsToPygameCoords(dragStart[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragStart[1], zoom, yOffset),],
+                [
+                    xPointCoordsToPygameCoords(dragEnd[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragStart[1], zoom, yOffset),])
+            pygame.draw.line(screen, (0,0,255), 
+                [
+                    xPointCoordsToPygameCoords(dragEnd[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragEnd[1], zoom, yOffset),],
+                [
+                    xPointCoordsToPygameCoords(dragStart[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragEnd[1], zoom, yOffset),])
+            pygame.draw.line(screen, (0,0,255), 
+                [
+                    xPointCoordsToPygameCoords(dragEnd[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragEnd[1], zoom, yOffset),],
+                [
+                    xPointCoordsToPygameCoords(dragEnd[0], zoom, xOffset),
+                    yPointCoordsToPygameCoords(dragStart[1], zoom, yOffset),])
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        dragEnd = [xPygameCoordsToPointCoords(pygame.mouse.get_pos()[0], zoom, xOffset),
+                                yPygameCoordsToPointCoords(pygame.mouse.get_pos()[1], zoom, yOffset)]
+                        pointsSelected = []
+                        for p in points:
+                            if (p.x > dragStart[0] and p.x < dragEnd[0] or p.x < dragStart[0] and p.x > dragEnd[0])\
+                                    and (p.y > dragStart[1] and p.y < dragEnd[1] or p.y < dragStart[1] and p.y > dragEnd[1]):
+                                p.dragSelected = True
+                                pointsSelected.append(p)
+                        if len(pointsSelected) > 0:
+                            state = stateDict["multiMove"]
+                        else:
+                            pointsSelected = []
+                            dragStart = None
+                            dragEnd = None
+                            state = stateDict["awaitSelect"]
+
+
+        if state == stateDict["multiMove"]:
+            renderGrid(screen, zoom, xOffset, yOffset)
+            renderBoundarys(screen, zoom, xOffset, yOffset)
+            renderBezier(screen, bezierList, zoom, xOffset, yOffset)
+            renderPoints(screen, points, zoom, xOffset, yOffset)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_1:
+                        moveBy = 2**2
+                    elif event.key == pygame.K_2:
+                        moveBy = 2**3
+                    elif event.key == pygame.K_3:
+                        moveBy = 2**4
+                    elif event.key == pygame.K_4:
+                        moveBy = 2**5
+                    elif event.key == pygame.K_5:
+                        moveBy = 2**6
+                    elif event.key == pygame.K_6:
+                        moveBy = 2**7
+                    elif event.key == pygame.K_7:
+                        moveBy = 2**8
+                    elif event.key == pygame.K_8:
+                        moveBy = 2**9
+                    elif event.key == pygame.K_9:
+                        moveBy = 2**10
+                    elif event.key == pygame.K_9:
+                        moveBy = 2**11
+                    elif event.key == pygame.K_0:
+                        moveBy = 0
+                    elif event.key == pygame.K_LEFT:
+                        for p in pointsSelected:
+                            p.x -= moveBy
+                    elif event.key == pygame.K_RIGHT:
+                        for p in pointsSelected:
+                            p.x += moveBy
+                    elif event.key == pygame.K_UP:
+                        for p in pointsSelected:
+                            p.y += moveBy
+                    elif event.key == pygame.K_DOWN:
+                        for p in pointsSelected:
+                            p.y -= moveBy
+                    if event.key == pygame.K_y:
+                        newSelectedPoints = []
+                        print(len(points))
+                        for p in pointsSelected:
+                            newPoint = SymbolPoint.Point(p.x, 2**15 - p.y)
+                            newPoint.dragSelected = True
+                            p.dragSelected = False
+                            newSelectedPoints.append(newPoint)
+                            points.append(newPoint)
+                        print(len(points))
+                        pointsSelected = newSelectedPoints
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 3:
+                        for p in pointsSelected:
+                            p.dragSelected = False
+                        pointsSelected = []
+                        dragStart = None
+                        dragEnd = None
+                        state = stateDict["awaitSelect"]
+        
 
 
 
@@ -463,4 +596,4 @@ def run(fileName):
     pygame.quit()
 
 
-run("font/BlockFont/B.symbol")
+run("font/BlockFont/C.symbol")

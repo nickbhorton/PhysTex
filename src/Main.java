@@ -8,8 +8,9 @@ import text.Text;
 
 public class Main {
     public static void main(String[] args){
-        Text testText = new Text("AB AB BBA BA");
-        BasicImage img = testText.getBlackAndWhiteRender(64, 2, 10, 40,  "BlockFont");
+        Text testText = new Text("ABCHPY");
+        int fontSize = 12;
+        BasicImage img = testText.getAlphaRender(fontSize, 1, fontSize/8, fontSize/2,  "BlockFont");
         img.toImage("src/text/TestRenders/test.png");
     }
     public static void main2(String[] args){
